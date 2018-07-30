@@ -57,18 +57,22 @@ def path_to_word(grid, path):
     Add all of the letters on the path to a string
     """
     return ''.join([grid[p] for p in path])
-    
+        
+   
 def search(grid, dictionary):
     """
     Search through the paths to locate words by matching strings to words in a dictionary
     """
     neighbours = all_grid_neighbours(grid)
     paths = []
+    full_words, stems = dictionary
     
     def do_search(path):
         word = path_to_word(grid, path)
-        if word in dictionary:
+        if word in full_words:
             paths.append(path)
+        if word not in stems:
+            return
         for next_pos in neighbours[path[-1]]:
             if next_pos not in path:
                 do_search(path + [next_pos])
@@ -85,12 +89,17 @@ def get_dictionary(dictionary_file):
     """
     Load Dictionary file
     """
-    if not dictionary_file.startswith('/'):
-        # if not absolute, then make path relative to our location:
-        dictionary_file = os.path.join(SCRIPT_PATH, dictionary_file)
-
+    full_words, stems = set(), set()
+    
     with open(dictionary_file) as f:
-        return [w.strip().upper() for w in f]
+        for word in f:
+            word = word.strip().upper()
+            full_words.add(word)
+            
+            for i in range(1, len(word)):
+                stems.add(word[:i])
+                
+    return full_words, stems
 
 def display_words(words):
     for word in words:
@@ -102,7 +111,7 @@ def main():
     """
     This is the function that will run the whole project
     """
-    grid = make_grid(2, 2)
+    grid = make_grid(4, 4)
     """
     Here you can change your grid from a 3x3 to a 2x2 to test run times
     """
